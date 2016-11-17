@@ -184,9 +184,10 @@ Concat.prototype.addFiles = function(beginSection) {
       var globMatcher = new Minimatch(glob);
       var removals = [];
       files.forEach(function (file) {
-          if (globMatcher.match(file)) {
+          var tfile = file.replace(posixInputPath + '/', '');
+          if (globMatcher.match(tfile)) {
               beginSection();
-              this.concat.addFile(file.replace(posixInputPath + '/', ''));
+              this.concat.addFile(tfile);
               removals.push(file);
           }
       }, this);
