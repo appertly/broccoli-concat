@@ -5,6 +5,7 @@ var merge = require('lodash.merge');
 var omit = require('lodash.omit');
 var uniq = require('lodash.uniq');
 var mkdirp = require('mkdirp');
+var Minimatch = require('minimatch').Minimatch;
 
 module.exports = Concat;
 Concat.prototype = Object.create(CachingWriter.prototype);
@@ -177,9 +178,21 @@ Concat.prototype.addFiles = function(beginSection) {
     throw new Error('Concat: nothing matched [' + this.inputFiles + ']');
   }
 
-  files.forEach(function(file) {
-    beginSection();
-    this.concat.addFile(file.replace(posixInputPath + '/', ''));
+  // new feature:
+  // go through the input patterns and add any matching files.
+  this.inputFiles.forEach(function (glob) {
+      var globMatcher = new Minimatch(glob);
+      var removals = [];
+      files.forEach(function (file) {
+          if (globMatcher.match(file)) {
+              beginSection();
+              this.concat.addFile(file.replace(posixInputPath + '/', ''));
+              removals.push(file);
+          }
+      }, this);
+      files = files.filter(function (f) {
+          return removals.indexOf(f) == -1;
+      });
   }, this);
 };
 
